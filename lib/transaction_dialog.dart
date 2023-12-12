@@ -64,38 +64,53 @@ class _NewTransactionState extends State<NewTransaction> {
     var isEqualDate = DateFormat('yyyy-MM-dd').format(pickedDate) ==
         DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    TimeOfDay? pickedTime = await showCustomTimePicker(
-        context: context,
-        onFailValidation: (context) => _showMyDialog(),
-        initialTime: TimeOfDay.now(),
-        selectableTimePredicate: (time) =>
-            isEqualDate &&
-                time!.hour <= TimeOfDay.now().hour &&
-                time!.minute <= TimeOfDay.now().minute ||
-            !isEqualDate);
+// 1
+    // TimeOfDay? pickedTime = await showCustomTimePicker(
+    //     context: context,
+    //     onFailValidation: (context) => _showMyDialog(),
+    //     initialTime: TimeOfDay.now(),
+    //     selectableTimePredicate: (time) =>
+    //         isEqualDate &&
+    //             (time!.hour < TimeOfDay.now().hour ||
+    //                 time!.hour == TimeOfDay.now().hour &&
+    //                     time!.minute <= TimeOfDay.now().minute) ||
+    //         !isEqualDate);
+// 2
+    bool isValidTime = false;
+    TimeOfDay? pickedTime;
+    while (!isValidTime) {
+      pickedTime =
+          await showTimePicker(context: context, initialTime: TimeOfDay.now());
 
-    // TimeOfDay? pickedTime =
-    //     await showTimePicker(context: context, initialTime: TimeOfDay.now());
+      if (pickedTime == null) return;
 
-    if (pickedTime == null) return;
+      isValidTime = isEqualDate &&
+              (pickedTime.hour < TimeOfDay.now().hour ||
+                  pickedTime.hour == TimeOfDay.now().hour &&
+                      pickedTime.minute <= TimeOfDay.now().minute) ||
+          !isEqualDate;
+
+      if (!isValidTime) await _showMyDialog();
+    }
 
     setState(() {
       _selectedDate = DateTime(pickedDate.year, pickedDate.month,
-          pickedDate.day, pickedTime.hour, pickedTime.minute);
+          pickedDate.day, pickedTime!.hour, pickedTime.minute);
     });
   }
 
   Future<void> _showMyDialog() async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Ошибка'),
+          title: const Text('Внимание'),
           content: const SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Ошибка в выборе времени.'),
+                Text(
+                    'Будущее время выбрать нельзя. Пожалуйста, повторите ввод.'),
               ],
             ),
           ),

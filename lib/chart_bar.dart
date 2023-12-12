@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ChartBar extends StatelessWidget {
   final String label;
@@ -7,6 +8,24 @@ class ChartBar extends StatelessWidget {
 
   const ChartBar(this.label, this.spendingAmount, this.spendingPctOfTotal,
       {super.key});
+
+  TextStyle _getHighlightLabel() {
+    TextStyle weekDayStyle = const TextStyle();
+    var isCurrentWeekDay =
+        DateFormat('EE', 'ru').format(DateTime.now()) == label;
+
+    if (label == "вс" || label == "сб") {
+      if (isCurrentWeekDay) {
+        weekDayStyle = const TextStyle(
+            color: Colors.red, decoration: TextDecoration.underline);
+      } else {
+        weekDayStyle = const TextStyle(color: Colors.red);
+      }
+    } else if (isCurrentWeekDay) {
+      weekDayStyle = const TextStyle(decoration: TextDecoration.underline);
+    }
+    return weekDayStyle;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +72,7 @@ class ChartBar extends StatelessWidget {
             ),
             SizedBox(
               height: constraints.maxHeight * 0.15,
-              child: FittedBox(child: Text(label)),
+              child: FittedBox(child: Text(label, style: _getHighlightLabel())),
             ),
           ],
         );

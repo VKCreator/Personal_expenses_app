@@ -55,6 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<UserTransaction> _userTransactions = [];
 
   bool _showChart = true;
+  StateSum _st = StateSum.sevenDaysSum;
 
   Future<bool> readDatabase() async {
     if (db == null) {
@@ -122,13 +123,21 @@ class _MyHomePageState extends State<MyHomePage> {
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Мои расходы'),
         actions: [
           PopupMenuButton(onSelected: (value) {
             setState(() {
-              _showChart = !_showChart;
+              if (value == "changeStateDiagram")
+                _showChart = !_showChart;
+              else {
+                if (_st == StateSum.allSum)
+                  _st = StateSum.sevenDaysSum;
+                else
+                  _st = StateSum.allSum;
+              }
             });
           }, itemBuilder: (BuildContext bc) {
             return [
@@ -136,9 +145,21 @@ class _MyHomePageState extends State<MyHomePage> {
                 value: "changeStateDiagram",
                 child: Text("${_showChart ? "Скрыть" : "Показать"} диаграмму"),
               ),
+              const PopupMenuItem(
+                value: "changeSumDiagram",
+                child: Text("Переключить диаграмму"),
+              ),
             ];
           })
         ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        // elevation: 5,
+        color: Colors.green,
+        shape: CircularNotchedRectangle(),
+        child: Container(
+          height: AppBar().preferredSize.height,
+        ),
       ),
       body: FutureBuilder<bool>(
         future: readDatabase(),
@@ -148,11 +169,14 @@ class _MyHomePageState extends State<MyHomePage> {
             final mediaQuery = MediaQuery.of(context);
 
             if (_showChart) {
-              children.add(const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Text("Расходы за последние 7 дней",
+              children.add(Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                      _st == StateSum.sevenDaysSum
+                          ? "Расходы за последние 7 дней"
+                          : "Расходы за все время по дням недели",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.w500))));
               children.add(SizedBox(
                 // width: 500,
@@ -165,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             AppBar().preferredSize.height -
                             mediaQuery.padding.top) *
                         0.28,
-                child: Chart(_userTransactions),
+                child: Chart(_userTransactions, _st),
               ));
             }
             if (_userTransactions.isNotEmpty) {
@@ -194,6 +218,7 @@ class _MyHomePageState extends State<MyHomePage> {
           } else {
             children = [const CircularProgressIndicator()];
           }
+
           return isLandscape
               ? SingleChildScrollView(
                   child: Column(
